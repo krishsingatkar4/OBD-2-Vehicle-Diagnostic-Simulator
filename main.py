@@ -1,7 +1,10 @@
 # OBD-2 Vehicle diagnostic simulator
+import time
+
 vehicles = []
 fault_database = []
 scan_history = []
+ecu_database = []
 
 class Vehicle:
     def __init__(self,vehicle_id,owner_name,company,model,year,fuel_type,vin):
@@ -92,11 +95,67 @@ def search_vehicle():
             print()
             break
     else:
-        print("Vehicle not found. Please first add your vehicle!")
-        
+        print("Vehicle not found. Please first add your vehicle!")       
 
 class ECU:
-    pass
+    def __init__(self,ecu_id,manufacturer,firmware_version,connection_status):
+        self.ecu_id = ecu_id
+        self.manufacturer = manufacturer
+        self.firmware = firmware_version
+        self.connection_status = connection_status
+
+    def display_ecu(self):
+        print("========== ECU ==========")
+        print(f"ECU ID : {self.ecu_id}")
+        print(f"Manufacturer : {self.manufacturer}")
+        print(f"Firmware : {self.firmware}")
+        print(f"Connection : {self.connection_status}")
+        print("=========================")
+
+    def connect(self):
+        if self.connection_status.lower().strip() == "Connected".lower().strip():
+            print("ECU is already connected....")
+        else:
+            print("Preparing ECU for connection!!!!")
+            time.sleep(4)
+            self.connection_status = "Connected"
+            print("ECU connected successfully....")
+
+    def disconnect(self):
+        if self.connection_status.lower().strip() == "Disconnect".lower().strip():
+            print("ECU is already disconnected!!!!")
+        else:
+            print("Preparing ECU for disconnecting!!!!")
+            time.sleep(4)
+            self.connection_status = "Disconnected"
+            print("ECU disconnected successfully....")
+
+def add_ecu():
+    ecu_id = input("Enter the ECU ID:- ")
+    manufacturer = input("Enter the manufacturer name:- ")
+    firmware_version = input("Enter the firmware name:- ")
+    connection_status = input("Enter the connection status of ECU:- ")
+    new_ecu = ECU(ecu_id,manufacturer,firmware_version,connection_status)
+    ecu_database.append(new_ecu)
+
+def search_ecu():
+    ecu_id = input("Enter the ECU ID of the ECU which you want to search:- ")
+    for ecu in ecu_database:
+        if ecu.ecu_id.lower().strip() == ecu_id.lower().strip():
+            ecu.display_ecu()
+            print()
+            break
+    else:
+        print("ECU not founded!")
+        
+def show_all_ecu():
+    if len(ecu_database) == 0:
+        print("No ECU found in OBD Daignostic!!!!")
+    else:
+        for ecu in ecu_database:
+            print("========== ALL ECU ==========")
+            ecu.display_ecu()
+            print()
 
 class FaultCode:
     def __init__(self,code,description,severity,status):
