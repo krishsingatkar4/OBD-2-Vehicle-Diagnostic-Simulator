@@ -63,7 +63,6 @@ def update_vehicle():
     else:
         print("Vehicle not found!")
             
-
 def add_vehicle():
     vehicle_id = input("Enter the ID of the vehicle:- ")
     owner_name = input("Enter the name of the owner:- ")
@@ -79,10 +78,10 @@ def show_all_vehicle():
     if len(vehicles) == 0:
         print("No vehicle found in OBD Diagnostic!")
     else:
-         for vehicle in vehicles:
-              print(" ========== ALL VEHICLES ==========")
-              vehicle.display_vehicle()
-              print()
+        for vehicle in vehicles:
+            print(" ========== ALL VEHICLES ==========")
+            vehicle.display_vehicle()
+            print()
 
 def search_vehicle():
     vehicle_model = input("Enter the model of the vehicle which you want to search:- ")
@@ -100,7 +99,105 @@ class ECU:
     pass
 
 class FaultCode:
-    pass
+    def __init__(self,code,description,severity,status):
+        self.code = code
+        self.description = description
+        self.severity = severity
+        self.status = status
+
+    def display_fault(self):
+        print("========== FAULT CODE ==========")
+        print(f"Fault code : {self.code}")
+        print(f"Description : {self.description}")
+        print(f"Severity : {self.severity}")
+        print(f"Status : {self.status}")
+        print("=============================")
+
+    def update_fault(self):
+        print("1. Want to update code:- ")
+        print("2. Want to update description:- ")
+        print("3. Want to update severity level:- ")
+        print("4. Want to update status:- ")
+        choice = input("Enter your choice:- ")
+        if choice == "1":
+            code = input("Enter the code which you want to update:- ")
+            self.code = code 
+            print(f"Code is updated successfully : {self.code}")
+        elif choice == "2":
+            description = input("Enter the description which you want to update:- ")
+            self.description = description
+            print(f"Description updated successfully : {self.description}")
+        elif choice == "3":
+            severity = input("Enter the severity level which you want to update:- ")
+            self.severity = severity
+            print(f"Severity level updated successfully : {self.severity}")
+        elif choice == "4":
+            status = input("Enter the status which you want to update:- ")
+            self.status = status
+            print(f"Status updated successfully : {self.status}")
+        else:
+            print("Invalid option selected. Please try again!")
+
+    def clear_fault(self):
+        print("1. You want to clear fault code fully:- ")
+        print("2. Want to change status from active to cleared:- ")
+        choice = input("Enter your choice:- ")
+        if choice == "1":
+            fault_database.remove(self)
+            print(f"Your fault code {self.code} is removed fully!")
+        elif choice == "2":
+            if self.status.lower().strip() == "active".lower().strip():
+                self.status = "cleared"
+                print(f"Your fault code {self.code} status changed to cleared!")
+            elif self.status.lower().strip() == "cleared".lower().strip():
+                print("Your fault code status is already clear!")
+        else:
+            print("Invalid option selected. Please try again!")
+
+def clear_fault():
+    code = input("Enter the fault code which you want to clear:- ")
+    for fault in fault_database:
+        if fault.code.lower().strip() == code.lower().strip():
+            fault.clear_fault()
+            break
+    else:
+        print("Fault code not found!")
+
+def update_fault():
+    code = input("Enter the code which you want to update:- ")
+    for fault in fault_database:
+        if fault.code.lower().strip() == code.lower().strip():
+            fault.update_fault()
+            break
+    else:
+        print("Fault code not found!")
+
+def add_fault():
+    code = input("Enter the fault code:- ")
+    description = input("Enter the description of the fault code:- ")
+    severity = input("Enter the severity level of fault code:- ")
+    status = input("Enter the status of fault code:- ")
+    new_fault = FaultCode(code,description,severity,status)
+    fault_database.append(new_fault)
+
+def show_all_faults():
+    if len(fault_database) == 0:
+        print("No fault code found!")
+    else:
+        for fault_code in fault_database:
+            print("========== ALL FAULT CODE ==========")
+            fault_code.display_fault()
+            print()
+
+def search_fault():
+    fault_code = input("Enter the fault code which you want to search:- ")
+    for fault in fault_database:
+        if fault.code.lower().strip() == fault_code.lower().strip():
+            fault.display_fault()
+            print()
+            break
+    else:
+        print("Fault code not found. Please try again later!")
 
 class DiagnosticScanner:
     pass
