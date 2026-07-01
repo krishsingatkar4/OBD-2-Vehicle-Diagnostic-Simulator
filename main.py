@@ -25,7 +25,44 @@ class Vehicle:
             print("=============================")
 
     def update_vehicle(self):
-            pass
+        print("1. Want to update owner:- ")
+        print("2. Want to update company:- ")
+        print("3. Want to update model:- ")
+        print("4. Want to update fuel type:- ")
+        print("5. Want to update VIN:- ")
+        choice = input("Enter your choice:- ")
+        if choice == "1":
+            owner = input("Enter the new owner:- ")
+            self.owner_name = owner
+            print(f"Owner name updated successfully : {self.owner_name}")
+        elif choice == "2":
+            company = input("Enter the new company name:- ")
+            self.company = company
+            print(f"Company name update successfully : {self.company}")
+        elif choice == "3":
+            model = input("Enter the new model name:- ")
+            self.model = model
+            print(f"Model name is updated successfuly : {self.model} ")
+        elif choice == "4":
+            fuel_type = input("Enter the new fuel type:- ")
+            self.fuel_type = fuel_type
+            print(f"Fuel type updated successfully : {self.fuel_type}")
+        elif choice == "5":
+            vin = input("Enter the new VIN:- ")
+            self.vin = vin
+            print(f"VIN updated successfully : {self.vin}")
+        else:
+            print("Invalid option selected. Please try again!")
+
+def update_vehicle():
+    vehicle_id = input("Enter the vehicle id of the vehicle which you want to update information:- ")
+    for vehicle in vehicles:
+        if vehicle.vehicle_id.lower().strip() == vehicle_id.lower().strip():
+            vehicle.update_vehicle()
+            break
+    else:
+        print("Vehicle not found!")
+            
 
 def add_vehicle():
     vehicle_id = input("Enter the ID of the vehicle:- ")
