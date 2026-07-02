@@ -1,5 +1,6 @@
 # OBD-2 Vehicle diagnostic simulator
 import time
+import random
 
 vehicles = []
 fault_database = []
@@ -259,7 +260,101 @@ def search_fault():
         print("Fault code not found. Please try again later!")
 
 class DiagnosticScanner:
-    pass
+    def __init__(self,scanner_id,scanner_name,scanner_status,connected_ecu):
+        self.scanner_id = scanner_id
+        self.scanner_name = scanner_name
+        self.scanner_status = scanner_status
+        self.connected_ecu = connected_ecu        
+    
+    def connect_to_ecu(self, ecu):
+        connected_ecu = input("Enter the ECU ID of which you want to connect:- ").lower().strip()
+        if len(ecu_database) == 0:
+            print("No ECU found for connection....")
+            return
+        for ecu in ecu_database:
+            if ecu.ecu_id.lower().strip() == connected_ecu.lower().strip():
+                print("ECU found successfully")
+                if self.scanner_status == "Connected".lower().strip():
+                    print("Your ECU is already connented....")
+                    return
+                elif self.scanner_status == "Disconnected".lower().strip():
+                    print("Preparing for connecting to ECU!!!!")
+                    time.sleep(2)
+                    ecu.connect()
+                    self.scanner_status = "Connected"
+                    self.connected_ecu = ecu 
+                    print(f"Scanner connected to ECU : {ecu.ecu_id}")
+                    return
+        else:
+            print("ECU not found....")
+
+    def disconnect_from_ecu(self):
+        if len(ecu_database) == 0:
+            print("No ECU found for disconnecting....")    
+        if self.scanner_status == "Disconnected".lower().strip():
+                    print("ECU is already Disconnected....")
+                    return
+        elif self.scanner_status == "Connected".lower().strip():
+                print("Preparing for disconnecting from ECU!!!!")
+                time.sleep(2)
+                self.connected_ecu.disconnect()
+                self.scanner_status = "Disconnected"
+                self.connected_ecu = None
+                print(f"Scanner disconnected from ECU : {self.connected_ecu.ecu_id}")
+                return
+        else:
+            print("ECU not found....")
+    
+    def scan_fault_codes(self):
+        if self.scanner_status == "Disconnected".lower().strip():
+            print("Please first connect scanner to ECU....")
+            self.connect_to_ecu()
+        elif self.scanner_status == "Connected".lower().strip():
+            if len(fault_database) == 0:
+                print("No Fault Code found....")
+            else:
+                for fault_code in fault_database:
+                    fault_code.display_fault()
+            print("Scan completed")
+
+    def read_live_data(self):
+        rpm = random.randint(800, 3500)
+        coolant_temp = random.randint(75, 105)
+        battery_voltage = round(random.uniform(12.0, 14.8),2)
+        fuel_level = random.randint(0, 100)
+        throttle_position = random.randint(0, 100)
+        vehicle_speed = random.randint(0, 200)
+        engine_load = random.randint(0, 100)
+        if self.scanner_status == "Disconnected".lower().strip():
+            print("Please first connect scanner to ECU....")
+            self.connect_to_ecu()
+        elif self.scanner_status == "Connected".lower().strip():
+            print("Generating Live Data....")
+            time.sleep(2)
+            print("========== LIVE DATA ==========")
+            print(f"RPM : {rpm} RPM")
+            print(f"Coolant Temp : {coolant_temp} °C")
+            print(f"Battery voltage : {battery_voltage} V")
+            print(f"Fuel level : {fuel_level} %")
+            print(f"Throttle Position : {throttle_position} %")
+            print(f"Vehicle Speed : {vehicle_speed} Km/h")
+            print(f"Engine Load : {engine_load} %")
+            print("===============================")
+        if rpm > 3000:
+            print(f"RPM at {rpm}. Please upshift!!!")
+        if coolant_temp >= 105:
+            print(f"High Coolant Temprature {coolant_temp}!!!!")
+        if battery_voltage <= 13:
+            print(f"Low Battery Voltage {battery_voltage}!!!!")
+        if fuel_level <= 10:
+            print(f"Low fuel level {fuel_level}!!!!")
+        if vehicle_speed >= 150:
+            print(f"High speed warning {vehicle_speed}!!!!")
+        if engine_load >= 80:
+            print(f"Engine is on high load {engine_load}")
+            print()
+        print("Live Data Read Successfully....")
+        
 
 class Report:
     pass
