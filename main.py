@@ -1,6 +1,7 @@
 # OBD-2 Vehicle diagnostic simulator
 import time
 import random
+import json
 
 vehicles = []
 fault_database = []
@@ -59,6 +60,22 @@ class Vehicle:
         else:
             print("Invalid option selected. Please try again!")
 
+    def to_dict(self):
+        return {"Vehicle ID": self.vehicle_id,
+         "Owner name": self.owner_name,
+         "Company": self.company,
+         "Model": self.model,
+         "Year": self.year,
+         "Fuel Type": self.fuel_type,
+         "VIN": self.vin}
+    
+def save_vehicle():
+    vehicle_data = []
+    for vehicle in vehicles:
+        vehicle_data.append(vehicle.to_dict())
+    with open("vehicle_information.json","w") as file:
+            json.dump(vehicle_data, file, indent=4)
+        
 def update_vehicle():
     vehicle_id = input("Enter the vehicle id of the vehicle which you want to update information:- ")
     for vehicle in vehicles:
@@ -131,6 +148,19 @@ class ECU:
             time.sleep(4)
             self.connection_status = "Disconnected"
             print("ECU disconnected successfully....")
+
+    def to_dict(self):
+        return{"ECU ID": self.ecu_id,
+               "Manufacturer": self.manufacturer,
+                "Firmware": self.firmware,
+                "Connection Status": self.connection_status}
+
+def save_ecu():
+    ecu_data = []
+    for ecu in ecu_database:
+        ecu_data.append(ecu.to_dict())
+    with open("ecu_data.json","w") as file:
+        json.dump(ecu_data, file, indent=4)
 
 def add_ecu():
     ecu_id = input("Enter the ECU ID:- ")
@@ -214,6 +244,19 @@ class FaultCode:
                 print("Your fault code status is already clear!")
         else:
             print("Invalid option selected. Please try again!")
+
+    def to_dict(self):
+        return {"Fault code": self.code,
+                "Description": self.description,
+                "Severity": self.severity,
+                "Status": self.status}
+
+def save_fault():
+    fault_data = []
+    for fault in fault_database:
+        fault_data.append(fault.to_dict())
+    with open("fault_code_data.json","w") as file:
+        json.dump(fault_data, file, indent=4)
 
 def clear_fault():
     code = input("Enter the fault code which you want to clear:- ")
@@ -415,9 +458,9 @@ class DaignosticReport:
         print(f"\nDate & Time : {self.date_time}")
         print("====================")
 
-    def save_report(report):
-        report_history.append(report)
-        print("Report saved successfully!")
+def save_report(report):
+    report_history.append(report)
+    print("Report saved successfully!")
 
 def show_report_history():
     if len(report_history) == 0:
