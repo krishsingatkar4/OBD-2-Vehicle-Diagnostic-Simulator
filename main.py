@@ -6,6 +6,7 @@ vehicles = []
 fault_database = []
 scan_history = []
 ecu_database = []
+report_history = []
 
 class Vehicle:
     def __init__(self,vehicle_id,owner_name,company,model,year,fuel_type,vin):
@@ -264,7 +265,7 @@ class DiagnosticScanner:
         self.scanner_id = scanner_id
         self.scanner_name = scanner_name
         self.scanner_status = scanner_status
-        self.connected_ecu = connected_ecu        
+        self.connected_ecu = connected_ecu
     
     def connect_to_ecu(self, ecu):
         connected_ecu = input("Enter the ECU ID of which you want to connect:- ").lower().strip()
@@ -304,7 +305,15 @@ class DiagnosticScanner:
                 return
         else:
             print("ECU not found....")
-    
+
+    def display_scanner(self):
+        print("========== DIAGNOSTIC SCANNER ==========")
+        print(f"Scanner ID : {self.scanner_id}")
+        print(f"Scanner Name : {self.scanner_name}")
+        print(f"Scanner Status : {self.scanner_status}")
+        print(f"Connected ECU : {self.connected_ecu}")
+        print("====================")
+
     def scan_fault_codes(self):
         if self.scanner_status == "Disconnected".lower().strip():
             print("Please first connect scanner to ECU....")
@@ -325,6 +334,13 @@ class DiagnosticScanner:
         throttle_position = random.randint(0, 100)
         vehicle_speed = random.randint(0, 200)
         engine_load = random.randint(0, 100)
+        self.live_data = {"RPM": rpm,
+                          "Coolant Temp": coolant_temp,
+                          "Battery Voltage": battery_voltage,
+                          "Fuel Level": fuel_level,
+                          "Throttle Position": throttle_position,
+                          "Vehicle Speed": vehicle_speed,
+                          "Engine Load": engine_load} 
         if self.scanner_status == "Disconnected".lower().strip():
             print("Please first connect scanner to ECU....")
             self.connect_to_ecu()
@@ -354,11 +370,64 @@ class DiagnosticScanner:
             print(f"Engine is on high load {engine_load}")
             print()
         print("Live Data Read Successfully....")
-        
 
-class Report:
-    pass
+    def display_live_data(self):
+        print("========== LIVE DATA ===========")
+        print(f"RPM : {self.live_data['RPM']} RPM")
+        print(f"Coolant Temp : {self.live_data['Coolant Temp']} °C")
+        print(f"Battery Voltage : {self.live_data['Battery Voltage']} V")
+        print(f"Fuel level : {self.live_data['Fuel Level']} %")
+        print(f"Throttle Position : {self.live_data['Throttle Position']} %")
+        print(f"Vehicle Speed : {self.live_data['Vehicle Speed']} km/h")
+        print(f"Engine Load : {self.live_data['Engine Load']} %")
+        print("====================")
 
+class DaignosticReport:
+    def __init__(self,vehicle,ecu,scanner,fault_list,live_data,date_time):
+        self.vehicle = vehicle
+        self.ecu = ecu
+        self.scanner = scanner
+        self.fault_list = fault_list
+        self.live_data = live_data
+        self.date_time = date_time
+
+    def generate_report(self):
+        print("========== DAIGNOSTIC REPORT ==========")
+        print("Vehicle Details")
+        self.vehicle.display_vehicle()
+
+        print("\nECU Details")
+        self.ecu.display_ecu()
+
+        print("\nFault code Details")
+        if len(self.fault_list) == 0:
+            print("No Fault Codes")
+        else:
+            for fault in self.fault_list:
+                fault.display_fault()
+
+        print("\nScanner Details")
+        self.scanner.display_scanner()
+
+        print("\nLive Data")
+        self.scanner.display_live_data()
+
+        print(f"\nDate & Time : {self.date_time}")
+        print("====================")
+
+    def save_report(report):
+        report_history.append(report)
+        print("Report saved successfully!")
+
+def show_report_history():
+    if len(report_history) == 0:
+        print("No Reports Found!")
+        return
+    print("========== REPORT HISTORY ==========")
+    for report in report_history:
+        report.generate_report()
+        print()
+    
 
 while True:
     print("1. Add Vehicle.")
