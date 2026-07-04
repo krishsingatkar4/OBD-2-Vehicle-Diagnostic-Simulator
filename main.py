@@ -68,7 +68,21 @@ class Vehicle:
          "Year": self.year,
          "Fuel Type": self.fuel_type,
          "VIN": self.vin}
-    
+
+def load_vehicle():
+    vehicles.clear()
+    with open("vehicle_information.json","r") as file:
+        vehicle_data = json.load(file)
+        for vehicle in vehicle_data:
+            new_vehicle = Vehicle(vehicle["Vehicle ID"],
+                                  vehicle["Owner name"],
+                                  vehicle["Company"],
+                                  vehicle["Model"],
+                                  vehicle["Year"],
+                                  vehicle["Fuel Type"],
+                                  vehicle["VIN"])
+            vehicles.append(new_vehicle)
+
 def save_vehicle():
     vehicle_data = []
     for vehicle in vehicles:
@@ -154,6 +168,17 @@ class ECU:
                "Manufacturer": self.manufacturer,
                 "Firmware": self.firmware,
                 "Connection Status": self.connection_status}
+
+def load_ecu():
+    ecu_database.clear()
+    with open("ecu_data.json","r") as file:
+        ecu_data = json.load(file)
+        for ecu in ecu_data:
+            new_ecu = ECU(ecu["ECU ID"],
+                          ecu["Manufacturer"],
+                          ecu["Firmware"],
+                          ecu["Connection Status"])
+            ecu_database.append(new_ecu)
 
 def save_ecu():
     ecu_data = []
@@ -250,6 +275,17 @@ class FaultCode:
                 "Description": self.description,
                 "Severity": self.severity,
                 "Status": self.status}
+
+def load_fault():
+    fault_database.clear()
+    with open("fault_code_data.json","r") as file:
+        fault_data = json.load(file)
+        for fault in fault_data:
+            new_fault = FaultCode(fault["Fault Code"],
+                                  fault["Description"],
+                                  fault["Severity"],
+                                  fault["Status"])
+            fault_database.append(new_fault)
 
 def save_fault():
     fault_data = []
