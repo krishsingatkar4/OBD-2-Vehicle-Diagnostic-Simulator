@@ -2,6 +2,7 @@
 import time
 import random
 import json
+from json import JSONDecodeError
 
 vehicles = []
 fault_database = []
@@ -69,19 +70,30 @@ class Vehicle:
          "Fuel Type": self.fuel_type,
          "VIN": self.vin}
 
+def validate_year(year):
+    if year >= 1886 and year <= 2026:
+        return True
+    else:
+        return False
+
 def load_vehicle():
     vehicles.clear()
-    with open("vehicle_information.json","r") as file:
-        vehicle_data = json.load(file)
-        for vehicle in vehicle_data:
-            new_vehicle = Vehicle(vehicle["Vehicle ID"],
-                                  vehicle["Owner name"],
-                                  vehicle["Company"],
-                                  vehicle["Model"],
-                                  vehicle["Year"],
-                                  vehicle["Fuel Type"],
-                                  vehicle["VIN"])
-            vehicles.append(new_vehicle)
+    try:
+        with open("vehicle_information.json","r") as file:
+            vehicle_data = json.load(file)
+            for vehicle in vehicle_data:
+                new_vehicle = Vehicle(vehicle["Vehicle ID"],
+                                    vehicle["Owner name"],
+                                    vehicle["Company"],
+                                    vehicle["Model"],
+                                    vehicle["Year"],
+                                    vehicle["Fuel Type"],
+                                    vehicle["VIN"])
+                vehicles.append(new_vehicle)
+    except FileNotFoundError:
+        print("Vehicle data file not found....")
+    except json.JSONDecodeError:
+        print("Vehicle data file is corrupted.")
 
 def save_vehicle():
     vehicle_data = []
@@ -100,15 +112,55 @@ def update_vehicle():
         print("Vehicle not found!")
             
 def add_vehicle():
-    vehicle_id = input("Enter the ID of the vehicle:- ")
-    owner_name = input("Enter the name of the owner:- ")
+    while True:
+        vehicle_id = input("Enter the ID of the vehicle:- ")
+        if is_unique_vehicle_id(vehicle_id): break
+        else: print("Vehicle ID already Exists....")
+    while True:
+        owner_name = input("Enter the name of the owner:- ")
+        if is_valid_owner_name(owner_name): break
+        else: print("Enter invalid name....")
     company = input("Enter the name of the company:- ")
     model = input("Enter the model of the vehicle:- ")
-    year = input("Enter the year of the vehicle:- ")
-    fuel_type = input("Enter the fuel type of the vehicle:- ")
-    vin = input("Enter the VIN of the vehicle:- ")
+    while True:
+        try:
+            year = int(input("Enter the year of the vehicle:- "))
+            if validate_year(year): break
+            else: validate_year(year), print("Invalid year....")
+        except ValueError:
+            print("Please enter Year in Number....")
+    while True:
+        fuel_type = input("Enter the fuel type of the vehicle:- ")
+        if is_valid_fuel_type(fuel_type): break
+        else: print("Invalid Fuel type entered....")
+    while True:
+        vin = (input("Enter the VIN of the vehicle:- "))
+        if is_unique_vehicle_vin(vin): break
+        else: print("VIN already exists....")
     new_vehicle = Vehicle(vehicle_id,owner_name,company,model,year,fuel_type,vin)
     vehicles.append(new_vehicle)
+
+def is_valid_owner_name(owner_name):
+    if owner_name.strip() == "":
+        return False
+    return True
+
+def is_valid_fuel_type(fuel_type):
+    if fuel_type in ["Petrol", "Diesel", "Electric", "Hybrid", "CNG"]:
+        return True
+    return False
+
+def is_unique_vehicle_vin(vin):
+    for vehicle in vehicles:
+        if vehicle.vin == vin: 
+            return False
+    return True
+
+def is_unique_vehicle_id(vehicle_id):
+    for vehicle in vehicles:
+        if vehicle.vehicle_id == vehicle_id:
+            return False
+    return True
 
 def show_all_vehicle():
     if len(vehicles) == 0:
@@ -170,15 +222,20 @@ class ECU:
                 "Connection Status": self.connection_status}
 
 def load_ecu():
-    ecu_database.clear()
-    with open("ecu_data.json","r") as file:
-        ecu_data = json.load(file)
-        for ecu in ecu_data:
-            new_ecu = ECU(ecu["ECU ID"],
-                          ecu["Manufacturer"],
-                          ecu["Firmware"],
-                          ecu["Connection Status"])
-            ecu_database.append(new_ecu)
+    try:
+        ecu_database.clear()
+        with open("ecu_data.json","r") as file:
+            ecu_data = json.load(file)
+            for ecu in ecu_data:
+                new_ecu = ECU(ecu["ECU ID"],
+                            ecu["Manufacturer"],
+                            ecu["Firmware"],
+                            ecu["Connection Status"])
+                ecu_database.append(new_ecu)
+    except FileNotFoundError:
+        print("ECU data File not found....")
+    except json.JSONDecodeError:
+        print("ECU data file not found....")
 
 def save_ecu():
     ecu_data = []
@@ -277,15 +334,20 @@ class FaultCode:
                 "Status": self.status}
 
 def load_fault():
-    fault_database.clear()
-    with open("fault_code_data.json","r") as file:
-        fault_data = json.load(file)
-        for fault in fault_data:
-            new_fault = FaultCode(fault["Fault Code"],
-                                  fault["Description"],
-                                  fault["Severity"],
-                                  fault["Status"])
-            fault_database.append(new_fault)
+    try:
+        fault_database.clear()
+        with open("fault_code_data.json","r") as file:
+            fault_data = json.load(file)
+            for fault in fault_data:
+                new_fault = FaultCode(fault["Fault code"],
+                                    fault["Description"],
+                                    fault["Severity"],
+                                    fault["Status"])
+                fault_database.append(new_fault)
+    except FileNotFoundError:
+        print("Fault code file not found....")
+    except json.JSONDecodeError:
+        print("Fault code file is corrupted....")
 
 def save_fault():
     fault_data = []
