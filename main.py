@@ -1,5 +1,6 @@
 # OBD-2 Vehicle diagnostic simulator
 import time
+from datetime import datetime
 import random
 import json
 from json import JSONDecodeError
@@ -9,6 +10,7 @@ fault_database = []
 scan_history = []
 ecu_database = []
 report_history = []
+service_database = []
 
 class Vehicle:
     def __init__(self,vehicle_id,owner_name,company,model,year,fuel_type,vin):
@@ -139,6 +141,7 @@ def add_vehicle():
         else: print("VIN already exists....")
     new_vehicle = Vehicle(vehicle_id,owner_name,company,model,year,fuel_type,vin)
     vehicles.append(new_vehicle)
+    print("Data added successfully....")
 
 def is_valid_owner_name(owner_name):
     if owner_name.strip() == "":
@@ -146,7 +149,7 @@ def is_valid_owner_name(owner_name):
     return True
 
 def is_valid_fuel_type(fuel_type):
-    if fuel_type in ["Petrol", "Diesel", "Electric", "Hybrid", "CNG"]:
+    if fuel_type.title() in ["Petrol", "Diesel", "Electric", "Hybrid", "CNG"]:
         return True
     return False
 
@@ -163,6 +166,7 @@ def is_unique_vehicle_id(vehicle_id):
     return True
 
 def show_all_vehicle():
+    print("DEBUG: show_all_vehicle called")
     if len(vehicles) == 0:
         print("No vehicle found in OBD Diagnostic!")
     else:
@@ -207,7 +211,7 @@ class ECU:
             print("ECU connected successfully....")
 
     def disconnect(self):
-        if self.connection_status.lower().strip() == "Disconnect".lower().strip():
+        if self.connection_status.lower().strip() == "Disconnected".lower().strip():
             print("ECU is already disconnected!!!!")
         else:
             print("Preparing ECU for disconnecting!!!!")
@@ -264,7 +268,7 @@ def search_ecu():
         
 def show_all_ecu():
     if len(ecu_database) == 0:
-        print("No ECU found in OBD Daignostic!!!!")
+        print("No ECU found in OBD Diagnostic!!!!")
     else:
         for ecu in ecu_database:
             print("========== ALL ECU ==========")
@@ -408,7 +412,7 @@ class DiagnosticScanner:
         self.scanner_status = scanner_status
         self.connected_ecu = connected_ecu
     
-    def connect_to_ecu(self, ecu):
+    def connect_to_ecu(self):
         connected_ecu = input("Enter the ECU ID of which you want to connect:- ").lower().strip()
         if len(ecu_database) == 0:
             print("No ECU found for connection....")
@@ -441,7 +445,10 @@ class DiagnosticScanner:
                 time.sleep(2)
                 self.connected_ecu.disconnect()
                 self.scanner_status = "Disconnected"
-                self.connected_ecu = None
+                ecu=self.connected_ecu
+                ecu.disconnect()
+                print(ecu.ecu_id)
+                self.connected_ecu=None
                 print(f"Scanner disconnected from ECU : {self.connected_ecu.ecu_id}")
                 return
         else:
@@ -459,7 +466,7 @@ class DiagnosticScanner:
         if self.scanner_status == "Disconnected".lower().strip():
             print("Please first connect scanner to ECU....")
             self.connect_to_ecu()
-        elif self.scanner_status == "Connected".lower().strip():
+        if self.scanner_status.lower()=="connected":
             if len(fault_database) == 0:
                 print("No Fault Code found....")
             else:
@@ -500,7 +507,7 @@ class DiagnosticScanner:
         if rpm > 3000:
             print(f"RPM at {rpm}. Please upshift!!!")
         if coolant_temp >= 105:
-            print(f"High Coolant Temprature {coolant_temp}!!!!")
+            print(f"High Coolant Temperature {coolant_temp}!!!!")
         if battery_voltage <= 13:
             print(f"Low Battery Voltage {battery_voltage}!!!!")
         if fuel_level <= 10:
@@ -523,7 +530,37 @@ class DiagnosticScanner:
         print(f"Engine Load : {self.live_data['Engine Load']} %")
         print("====================")
 
-class DaignosticReport:
+    def to_dict(self):
+        return {"Scanner ID": self.scanner_id,
+                "Scanner Name": self.scanner_name,
+                "Scanner Status": self.scanner_status,
+                "Connected ECU": self.connected_ecu.ecu_id if self.connected_ecu else None}
+    
+def save_scanner():
+    scanner_data = []
+    for scanner in scan_history:
+        scanner_data.append(scanner.to_dict())
+    with open("scanner_data","w") as file:
+        json.dump(scanner_data, file, indent=4)
+
+def load_scanner():
+    scan_history.clear()
+    try:
+        with open("scanner_data.json", "w") as file:
+            scanner_data = json.load(file)
+            for scanner in scanner_data:
+                new_scanner = DiagnosticScanner(
+                    scanner["Scanner ID"],
+                    scanner["Scanner Name"],
+                    scanner["Scanner Status"],
+                    scanner["Connected ECU"])
+                scan_history.append(new_scanner)
+    except FileNotFoundError:
+        print("Scanner data file not found....")
+    except json.JSONDecodeError:
+        print("Scanner data file is corrupted.")
+
+class DiagnosticReport:
     def __init__(self,vehicle,ecu,scanner,fault_list,live_data,date_time):
         self.vehicle = vehicle
         self.ecu = ecu
@@ -556,6 +593,14 @@ class DaignosticReport:
         print(f"\nDate & Time : {self.date_time}")
         print("====================")
 
+    def to_dict(self):
+        return {"Vehicle": self.vehicle.to_dict(),
+                "ECU": self.ecu.to_dict(),
+                "Scanner": self.scanner.to_dict(),
+                "Fault List":[fault.to_dict() for fault in self.fault_list],
+                "Live Data": self.live_data,
+                "Data Time": self.date_time}
+    
 def save_report(report):
     report_history.append(report)
     print("Report saved successfully!")
@@ -568,10 +613,44 @@ def show_report_history():
     for report in report_history:
         report.generate_report()
         print()
-    
+
+def generate_diagnostic_report():
+    if len(vehicles) == 0:
+        print("No vehicle found!")
+        return
+    if len(ecu_database) == 0:
+        print("No ECU found!")
+        return
+    if len(scan_history) == 0:
+        print("No scanner found!")
+        return
+    scanner = scan_history[0]
+    if scanner.scanner_status.lower().strip() != "connected":
+        print("Please connect the scanner to an ECU first.")
+        return
+    if not hasattr(scanner, "live_data"):
+        print("Please read live sensor data first.")
+        return
+    report = DiagnosticReport(
+        vehicle=vehicles[0],
+        ecu=scanner.connected_ecu,
+        scanner=scanner,
+        fault_list=fault_database,
+        live_data=scanner.live_data,
+        date_time=datetime.now().strftime("%d-%m-%Y %H:%M:%S"))
+    report.generate_report()
+    save_report(report)
+
+load_vehicle()
+load_ecu()
+load_fault()
+load_scanner()
 
 while True:
-    print("1. Add Vehicle.")
+    print("==========================================")
+    print("      AUTOMOTIVE MANAGEMENT SYSTEM")
+    print("==========================================")
+    print("\n1. Add Vehicles.")
     print("2. Show All Vehicle.")
     print("3. Search Vehicle.")
     print("4. Connect to ECU.")
@@ -580,8 +659,55 @@ while True:
     print("7. Show All Fault Codes.")
     print("8. Search Fault Code.")
     print("9. Clear Fault Code.")
-    print("10. Vehicle Health Report.")
-    print("11. Export Diagonstic Report.")
+    print("10. Generate Diagnostic Report.")
+    print("11. Show Report History.")
     print("12. Save Data.")
     print("13. Load Data.")
-    print("14. Exit.")
+    print("14. Exit.\n")
+    print("==========================================")
+
+    choice = input("Enter your choice:- ")
+    if choice == "1":
+        add_vehicle()
+    elif choice == "2":
+        show_all_vehicle()
+    elif choice == "3":
+        search_vehicle()
+    elif choice == "4":
+        scan_history[0].connect_to_ecu()
+    elif choice == "5":
+        scan_history[0].read_live_data()
+    elif choice == "6":
+        scan_history[0].scan_fault_codes()
+    elif choice == "7":
+        show_all_faults()
+    elif choice == "8":
+        search_fault()
+    elif choice == "9":
+        clear_fault()
+    elif choice == "10":
+        generate_diagnostic_report()
+    elif choice == "11":
+        show_report_history()
+    elif choice == "12":
+        save_vehicle()
+        save_ecu()
+        save_fault()
+        save_scanner()
+        print("Data saved successfully.")
+    elif choice == "13":
+        load_vehicle()
+        load_ecu()
+        load_fault()
+        load_scanner()
+        print("Data loaded successfully.")
+    elif choice == "14":
+        save_vehicle()
+        save_ecu()
+        save_fault()
+        save_scanner()
+        print("Data saved successfully.")
+        print("Thank you for using Automotive Management System!!!!")
+        break
+    else:
+        print("Invaild choice. Please try again!!!!")
